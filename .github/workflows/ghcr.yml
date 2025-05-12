@@ -12,7 +12,7 @@ permissions:
 
 jobs:
     generate-serial:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         outputs:
             serial: ${{ steps.serial.outputs.serial }}
         steps:
@@ -22,11 +22,17 @@ jobs:
 
     build:
         needs: generate-serial
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
         strategy:
             matrix:
                 platform: [linux/amd64, linux/arm64]
+                runner: [ubuntu-24.04, ubuntu-24.04-arm]
+                exclude:
+                    - platform: linux/amd64
+                      runner: ubuntu-24.04-arm
+                    - platform: linux/arm64
+                      runner: ubuntu-24.04
+        runs-on: ${{ matrix.runner }}
+        timeout-minutes: 10
         steps:
             - name: リポジトリのチェックアウト
               uses: actions/checkout@v4
