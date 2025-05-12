@@ -1,0 +1,39 @@
+name: イメージの作成と公開
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: シリアル値の作成(タグ用)
+              id: serial
+              run: echo "serial=$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+            - name: リポジトリのチェックアウト
+              uses: actions/checkout@v4
+
+            - name: QEMU のセットアップ
+              uses: docker/setup-qemu-action@v2
+              with:
+                  platforms: linux/amd64,linux/arm64
+
+            - name: Docker Buildx のセットアップ
+              uses: docker/setup-buildx-action@v1
+
+            - name: Docker Buildx のビルドとプッシュ
+              uses: docker/build-push-action@v2
+              with:
+                  context: .
+                  push: true
+                  platforms: linux/amd64,linux/arm64
+                  tags: |
+                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
+                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ steps.serial.outputs.serial }}
+                  cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache
+                  cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache,mode=max
