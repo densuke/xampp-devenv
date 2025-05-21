@@ -112,6 +112,7 @@ jobs:
                       --amend "${REPO}:${TAG}-amd64-ubuntu" \
                       --amend "${REPO}:${TAG}-arm64-ubuntu" 
                     docker manifest push "${REPO}:${item}"
+                  done
                   for item in latest "${TAG}"; do
                     docker manifest create "${REPO}:${item}" \
                       "${REPO}:${TAG}-amd64-alpine" \
