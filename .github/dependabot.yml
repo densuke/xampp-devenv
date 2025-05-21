@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: "docker"
     directory: "/" # ルートディレクトリにDockerfileがある場合
+    target-file: "Dockerfile"
     schedule:
       interval: "weekly"
     allow:
@@ -11,6 +12,7 @@ updates:
         update-types: ["version-update:semver-major"]
   - package-ecosystem: "docker"
     directory: "/" # ルートディレクトリにDockerfile.alpineがある場合
+    target-file: "Dockerfile.alpine"
     schedule:
       interval: "weekly"
     allow:
