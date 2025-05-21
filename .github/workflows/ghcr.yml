@@ -24,13 +24,33 @@ jobs:
         needs: generate-serial
         strategy:
             matrix:
-                platform: [amd64, arm64]
-                runner: [ubuntu-24.04, ubuntu-24.04-arm]
-                exclude:
+                include:
+                    # 従来のUbuntuベースイメージ
                     - platform: amd64
-                      runner: ubuntu-24.04-arm
-                    - platform: arm64
                       runner: ubuntu-24.04
+                      dockerfile: Dockerfile
+                      suffix: ubuntu
+                    - platform: arm64
+                      runner: ubuntu-24.04-arm
+                      dockerfile: Dockerfile
+                      suffix: ubuntu
+                    # Alpineベースイメージ
+                    - platform: amd64
+                      runner: ubuntu-24.04
+                      dockerfile: Dockerfile.alpine
+                      suffix: alpine
+                    - platform: arm64
+                      runner: ubuntu-24.04-arm
+                      dockerfile: Dockerfile.alpine
+                      suffix: alpine
+
+                # platform: [amd64, arm64]
+                # runner: [ubuntu-24.04, ubuntu-24.04-arm]
+                # exclude:
+                #     - platform: amd64
+                #       runner: ubuntu-24.04-arm
+                #     - platform: arm64
+                #       runner: ubuntu-24.04
         runs-on: ${{ matrix.runner }}
         timeout-minutes: 10
         steps:
@@ -56,12 +76,13 @@ jobs:
               uses: docker/build-push-action@v6
               with:
                   context: .
+                  file: ${{ matrix.dockerfile }}
                   provenance: false
                   push: true
                   platforms: linux/${{ matrix.platform }}
                   tags: |
-                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}-${{ matrix.platform }}
-                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.generate-serial.outputs.serial }}-${{ matrix.platform }}
+                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}-${{ matrix.platform }}-${{matrix.suffix }}
+                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.generate-serial.outputs.serial }}-${{ matrix.platform }}-${{matrix.suffix }}
                   cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache
                   cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache,mode=max
     merge:
@@ -86,9 +107,16 @@ jobs:
                   TAG="${{ needs.generate-serial.outputs.serial }}"
                   for item in latest "${TAG}"; do
                     docker manifest create "${REPO}:${item}" \
-                      "${REPO}:${TAG}-amd64" \
-                      "${REPO}:${TAG}-arm64" \
-                      --amend "${REPO}:${TAG}-amd64" \
-                      --amend "${REPO}:${TAG}-arm64"
+                      "${REPO}:${TAG}-amd64-ubuntu" \
+                      "${REPO}:${TAG}-arm64-ubuntu" \
+                      --amend "${REPO}:${TAG}-amd64-ubuntu" \
+                      --amend "${REPO}:${TAG}-arm64-ubuntu" 
                     docker manifest push "${REPO}:${item}"
+                  for item in latest "${TAG}"; do
+                    docker manifest create "${REPO}:${item}" \
+                      "${REPO}:${TAG}-amd64-alpine" \
+                      "${REPO}:${TAG}-arm64-alpine" \
+                      --amend "${REPO}:${TAG}-amd64-alpine" \
+                      --amend "${REPO}:${TAG}-arm64-alpine" 
+                    docker manifest push "${REPO}:${item}-alpine"
                   done
