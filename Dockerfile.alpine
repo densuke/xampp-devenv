@@ -57,7 +57,6 @@ RUN rm -f /usr/local/bin/pecl /usr/local/bin/pear \
 
 COPY --from=composer/composer:lts /usr/bin/composer /usr/bin/composer
 
-RUN apk add --no-cache python3
 
 EXPOSE 80
 WORKDIR /app
