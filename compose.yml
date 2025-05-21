@@ -1,0 +1,12 @@
+# 動作チェック用のdocker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./public:/var/www/html
+    ports:
+      - "8080:80"

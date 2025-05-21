@@ -1,0 +1,4 @@
+.github/
+public/
+./*.yml
+Dockerfile

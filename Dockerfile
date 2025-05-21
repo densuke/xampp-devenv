@@ -1,29 +1,11 @@
 FROM php:8.3-apache
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=1000
+
+
+WORKDIR /usr/local
+
 # ツールのインストール
-# hadolint ignore=DL3008
-RUN <<EOT
-    apt-get update
-    apt-get install -y curl wget git sudo unzip --no-install-recommends 
-    apt-get clean
-    rm -rf /var/lib/apt/lists
-EOT
-
-WORKDIR /usr/local/etc/php
-RUN <<EOT
-    export MAKEFLAGS=-j$(nproc)
-    docker-php-ext-install mysqli pdo_mysql posix
-    pecl install xdebug
-    ln -s php.ini-development php.ini
-EOT
-
-COPY xdebug.ini conf.d/
-
 
 # GitHub CLI
-
 SHELL ["/bin/bash", "-e", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008,DL3015
 RUN <<EOT
@@ -39,6 +21,30 @@ RUN <<EOT
     rm -rf /var/lib/apt/lists
 EOT
 
+# hadolint ignore=DL3008
+RUN <<EOT
+    apt-get update
+    apt-get install -y curl git sudo unzip --no-install-recommends 
+    apt-get upgrade -y --auto-remove --purge
+    apt-get clean
+    rm -rf /var/lib/apt/lists
+EOT
+
+WORKDIR /usr/local/etc/php
+
+RUN <<EOT
+    export MAKEFLAGS="-j$(nproc)"
+    docker-php-ext-install mysqli pdo_mysql
+    pecl install xdebug
+    ln -s php.ini-development php.ini
+EOT
+
+COPY xdebug.ini conf.d/
+
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
 # ユーザーの作成
 RUN <<EOT
     groupadd --gid $USER_GID $USERNAME
@@ -48,7 +54,6 @@ RUN <<EOT
     # sudo設定(パス無し実行)
     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 EOT
-
 
 WORKDIR /workspaces
 USER $USERNAME
