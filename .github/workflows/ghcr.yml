@@ -90,3 +90,4 @@ jobs:
                       "${REPO}:${TAG}-arm64" \
                       --amend "${REPO}:${TAG}-amd64" \
                       --amend "${REPO}:${TAG}-arm64"
+                  done
