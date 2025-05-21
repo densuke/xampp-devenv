@@ -39,7 +39,7 @@ RUN <<EOT
     ln -s php.ini-development php.ini
 EOT
 
-COPY cond.d/*.ini conf.d/
+COPY conf.d/*.ini conf.d/
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
