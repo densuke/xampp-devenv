@@ -47,6 +47,13 @@ jobs:
         steps:
             - name: リポジトリのチェックアウト
               uses: actions/checkout@v4
+            - name: GHCR向けのログイン
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
 
             - name: QEMU のセットアップ
               uses: docker/setup-qemu-action@v3
