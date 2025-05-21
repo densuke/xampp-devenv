@@ -63,13 +63,13 @@ jobs:
                   file: ${{ matrix.dockerfile }}
                   provenance: false
                   push: false
-                  load: true
+                  load: false
                   platforms: linux/${{ matrix.platform }}
                   tags: |
-                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}-${{ matrix.platform }}-${{matrix.suffix }}
-                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.generate-serial.outputs.serial }}-${{ matrix.platform }}-${{matrix.suffix }}
-                  cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache
-                  cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache,mode=max
+                      test:${{matrix.suffix }}
+                      test:${{matrix.suffix }}
+                  cache-from: type=registry,ref=test:cache
+                  cache-to: type=registry,ref=test:cache,mode=max
 
         
     
