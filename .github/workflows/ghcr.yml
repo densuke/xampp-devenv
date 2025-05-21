@@ -2,8 +2,12 @@ name: イメージの作成と公開
 
 on:
     push:
-        branches:
-            - main
+      branches:
+        - main
+      paths: 
+        - "**/Dockerfile*"
+        - "./conf.d/*"
+
     workflow_dispatch:
 
 permissions:
