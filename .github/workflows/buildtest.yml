@@ -1,0 +1,75 @@
+name: イメージの作成テスト
+
+on:
+  pull_request: 
+    branches: 
+      - main
+  push:
+    branches-ignore: 
+      - main
+    paths: 
+      - "**/Dockerfile*"
+      - "./conf.d/*"
+  workflow_dispatch:
+
+permissions:
+    contents: read
+    packages: read
+
+jobs:
+    generate-serial:
+        runs-on: ubuntu-24.04
+        outputs:
+            serial: ${{ steps.serial.outputs.serial }}
+        steps:
+            - name: シリアル値の作成(タグ用)
+              id: serial
+              run: echo "serial=$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+
+    build:
+        needs: generate-serial
+        strategy:
+            matrix:
+                include:
+                    # 従来のUbuntuベースイメージ
+                    - platform: amd64
+                      runner: ubuntu-24.04
+                      dockerfile: Dockerfile
+                      suffix: ubuntu
+                    # Alpineベースイメージ
+                    - platform: amd64
+                      runner: ubuntu-24.04
+                      dockerfile: Dockerfile.alpine
+                      suffix: alpine
+
+        runs-on: ${{ matrix.runner }}
+        timeout-minutes: 10
+        steps:
+            - name: リポジトリのチェックアウト
+              uses: actions/checkout@v4
+
+            - name: QEMU のセットアップ
+              uses: docker/setup-qemu-action@v3
+              with:
+                  platforms: linux/${{ matrix.platform }}
+
+            - name: Docker Buildx のセットアップ
+              uses: docker/setup-buildx-action@v3
+
+            - name: Docker Buildx のビルドとプッシュ
+              uses: docker/build-push-action@v6
+              with:
+                  context: .
+                  file: ${{ matrix.dockerfile }}
+                  provenance: false
+                  push: false
+                  load: true
+                  platforms: linux/${{ matrix.platform }}
+                  tags: |
+                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}-${{ matrix.platform }}-${{matrix.suffix }}
+                      ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.generate-serial.outputs.serial }}-${{ matrix.platform }}-${{matrix.suffix }}
+                  cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache
+                  cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache,mode=max
+
+        
+    
