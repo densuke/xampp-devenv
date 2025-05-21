@@ -1,0 +1,65 @@
+FROM php:8.3.21-zts-alpine3.21
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+WORKDIR /usr/local
+
+# ツールのインストール
+
+# GitHub CLI
+SHELL ["/bin/sh", "-e", "-o", "pipefail", "-c"]
+# hadolint ignore=DL3008,DL3015,DL3018
+RUN apk add --no-cache git wget curl sudo unzip && \
+    apk --no-cache upgrade
+
+RUN <<EOT
+    PROCS=$(nproc) || true
+    export MAKEFLAGS="-j${PROCS}"
+    docker-php-ext-install mysqli pdo_mysql opcache
+EOT
+
+WORKDIR /usr/local/etc/php
+
+
+# hadolint ignore=DL3018
+RUN <<EOT
+    PROCS=$(nproc) || true
+    export MAKEFLAGS="-j${PROCS}"
+    apk add --no-cache --virtual build-deps autoconf make gcc musl-dev linux-headers
+    pecl install xdebug
+    docker-php-ext-enable xdebug
+    apk del build-deps
+EOT
+
+# 追加の設定ファイルをコピー
+COPY conf.d/* conf.d/
+
+# ユーザーの作成
+RUN <<EOT
+    addgroup --gid $USER_GID $USERNAME
+    adduser -s /bin/bash -u $USER_UID -G $USERNAME -D $USERNAME
+    mkdir /workspaces
+    chown $USERNAME:$USERNAME /workspaces
+    # sudo設定(パス無し実行)
+    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+EOT
+
+# コンテナ使用時には不要なので消しておく
+RUN rm -f /usr/local/bin/pecl /usr/local/bin/pear \
+    && rm -rf /usr/local/lib/php/PEAR* \
+    && rm -rf /usr/local/lib/php/pear* \
+    && rm -f /usr/local/lib/php/PEAR.php \
+    && rm -f /usr/local/lib/php/pearcmd.php \
+    && rm -f /usr/local/lib/php/peclcmd.php \
+    && find /usr/local/lib/php -iname '*pear*' -exec rm -rf {} + \
+    && find /usr/local/lib/php -iname '*pecl*' -exec rm -rf {} +
+
+COPY --from=composer/composer:lts /usr/bin/composer /usr/bin/composer
+
+RUN apk add --no-cache python3
+
+WORKDIR /app
+USER $USERNAME
+
+CMD ["php", "-S", "0.0.0.0:80", "-t", "./public"]
