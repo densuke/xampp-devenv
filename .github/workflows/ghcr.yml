@@ -64,3 +64,29 @@ jobs:
                       ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.generate-serial.outputs.serial }}-${{ matrix.platform }}
                   cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache
                   cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:cache,mode=max
+    merge:
+        # ビルド結果を基に、ひとつのイメージタグとしてマージする
+        # 付与するのはシリアル値とlatest
+        needs: 
+          - build
+          - generate-serial
+        runs-on: ubuntu-24.04
+        steps:
+            - name: GHCR向けのログイン
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: マニフェストを作成
+              id: manifest
+              run: |
+                  REPO="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}"
+                  TAG="${{ needs.generate-serial.outputs.serial }}"
+                  for item in latest "${TAG}"; do
+                  docker manifest create "${REPO}:${item}" \
+                      "${REPO}:${TAG}-amd64" \
+                      "${REPO}:${TAG}-arm64" \
+                      --amend "${REPO}:${TAG}-amd64" \
+                      --amend "${REPO}:${TAG}-arm64"
