@@ -55,5 +55,6 @@ RUN <<EOT
     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 EOT
 
+EXPOSE 80
 WORKDIR /workspaces
 USER $USERNAME
