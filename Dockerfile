@@ -1,4 +1,8 @@
 FROM php:8.3-apache
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
 
 
 WORKDIR /usr/local
@@ -41,10 +45,6 @@ EOT
 
 COPY conf.d/*.ini conf.d/
 
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=1000
-
 # ユーザーの作成
 RUN <<EOT
     groupadd --gid $USER_GID $USERNAME
@@ -55,5 +55,6 @@ RUN <<EOT
     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 EOT
 
+EXPOSE 80
 WORKDIR /workspaces
 USER $USERNAME
