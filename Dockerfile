@@ -34,12 +34,12 @@ WORKDIR /usr/local/etc/php
 
 RUN <<EOT
     export MAKEFLAGS="-j$(nproc)"
-    docker-php-ext-install mysqli pdo_mysql
+    docker-php-ext-install mysqli pdo_mysql opcache
     pecl install xdebug
     ln -s php.ini-development php.ini
 EOT
 
-COPY xdebug.ini conf.d/
+COPY cond.d/*.ini conf.d/
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
