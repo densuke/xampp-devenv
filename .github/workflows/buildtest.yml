@@ -1,4 +1,4 @@
-name: イメージの作成と公開
+name: イメージの作成テスト
 
 on:
   pull_request: 
