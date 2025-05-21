@@ -108,16 +108,12 @@ jobs:
                   for item in latest "${TAG}"; do
                     docker manifest create "${REPO}:${item}" \
                       "${REPO}:${TAG}-amd64-ubuntu" \
-                      "${REPO}:${TAG}-arm64-ubuntu" \
-                      --amend "${REPO}:${TAG}-amd64-ubuntu" \
-                      --amend "${REPO}:${TAG}-arm64-ubuntu" 
+                      "${REPO}:${TAG}-arm64-ubuntu"
                     docker manifest push "${REPO}:${item}"
                   done
                   for item in latest "${TAG}"; do
-                    docker manifest create "${REPO}:${item}" \
+                    docker manifest create "${REPO}:${item}-alpine" \
                       "${REPO}:${TAG}-amd64-alpine" \
-                      "${REPO}:${TAG}-arm64-alpine" \
-                      --amend "${REPO}:${TAG}-amd64-alpine" \
-                      --amend "${REPO}:${TAG}-arm64-alpine" 
+                      "${REPO}:${TAG}-arm64-alpine"
                     docker manifest push "${REPO}:${item}-alpine"
                   done
